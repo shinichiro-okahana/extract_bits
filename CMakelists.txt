@@ -1,0 +1,28 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(ExtractBitsTest)
+
+# C++のバージョン設定
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+# Google Test をダウンロード（初回のみ）
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/heads/main.zip
+)
+# FetchContent_MakeAvailable のために CMP0135 を有効化
+cmake_policy(SET CMP0135 NEW)
+FetchContent_MakeAvailable(googletest)
+
+# テスト対象のソースファイル
+add_library(extract_bits STATIC extract_bits.cpp)
+
+# Google Test のセットアップ
+enable_testing()
+add_executable(test_extract_bits test.cpp)
+target_link_libraries(test_extract_bits extract_bits gtest_main)
+
+# CTest を有効化
+add_test(NAME ExtractBitsTest COMMAND test_extract_bits)
