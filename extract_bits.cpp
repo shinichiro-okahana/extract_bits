@@ -21,14 +21,11 @@ std::string str(std::vector<uint8_t> a) {
   }
   return ss.str();
 }
+
 std::vector<uint8_t> extract_bits(std::vector<uint8_t> src, Layout layout) {
   size_t len = layout.byte_pos_end_ - layout.byte_pos_begin_ + 1;
-  std::cout << "len=" << len << std::endl;
   uint8_t r_mask = 0xff >> (7 - layout.bit_pos_begin_);
-  std::cout << "bit_begin=" << (int)layout.bit_pos_begin_ << " r_mask=0x"
-            << std::hex << (int)r_mask << std::endl;
 
-  std::cout << "len=" << len << std::endl;
   if (len > sizeof(uint64_t) + 1) {
     throw std::out_of_range("out of range");
   }
@@ -38,11 +35,7 @@ std::vector<uint8_t> extract_bits(std::vector<uint8_t> src, Layout layout) {
   std::copy(src.begin() + layout.byte_pos_begin_,
             src.begin() + layout.byte_pos_end_ + 1,
             dst.begin() + dst.size() - len);
-  std::cout << "1 dst[" << sizeof(uint64_t) - len << "]=0x" << std::hex
-            << (int)dst[sizeof(uint64_t) - len] << std::endl;
   dst[dst.size() - len] &= r_mask;
-  std::cout << "2 dst[" << sizeof(uint64_t) - len << "]=0x" << std::hex
-            << (int)dst[sizeof(uint64_t) - len] << std::endl;
   if (layout.bit_pos_end_ > 0) {
     for (int i = 0; i <= len; i++) {
       uint8_t n = dst[sizeof(uint64_t) - i - 1] << (8 - layout.bit_pos_end_);
@@ -50,9 +43,6 @@ std::vector<uint8_t> extract_bits(std::vector<uint8_t> src, Layout layout) {
       dst[sizeof(uint64_t) - i] |= n;
     }
   }
-  //   std::vector<uint8_t> dst2(dst.size()-1);
-  //   std::copy(dst.begin()+1, dst.end(), dst2.begin());
-  //   return dst2;
   dst.erase(dst.begin());
   return dst;
 }
