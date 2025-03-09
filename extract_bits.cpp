@@ -69,3 +69,20 @@ size_t Layout::length() const {
 
   return (begin <= end) ? (end - begin + 1) : 0;
 }
+
+std::vector<uint8_t> vector_shift(std::vector<uint8_t> data, int shift_width) {
+    if (data.empty() || shift_width == 0) return data;
+
+    std::vector<uint8_t> result(data.size(), 0);
+    int bit_offset = shift_width % 8; // shift_width is guaranteed to be 0-7
+
+    for (size_t i = 0; i < data.size(); ++i) {
+        result[i] = data[i] << bit_offset;
+        if (i+1 < data.size() && bit_offset > 0) {
+            result[i] |= data[i + 1] >> (8 - bit_offset);
+        }
+    }
+
+    return result;
+}
+

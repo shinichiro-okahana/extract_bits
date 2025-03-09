@@ -11,6 +11,7 @@ struct Layout {
 };
 
 std::string str(std::vector<uint8_t> a);
+std::vector<uint8_t> vector_shift(std::vector<uint8_t> data, int shift_width);
 std::vector<uint8_t> extract_bits(std::vector<uint8_t> src, Layout layout);
 
 // C++20以前の環境用のカスタム実装
@@ -62,4 +63,37 @@ T extract_bits(std::vector<uint8_t> src, Layout layout) {
   }
   std::cout << "isLittleEndian()=" << isLittleEndian() << " data=" << str(data) << " result=" << std::hex << result << std::endl;
   return static_cast<T>(result);
+}
+
+template <typename T>
+std::vector<uint8_t> write_bits(std::vector<uint8_t> src, const Layout& layout, T data) {
+    std::vector<uint8_t> dst(src);
+    std::vector<uint8_t> vdata(sizeof(data) + 1);
+    if (isLittleEndian()) {
+        data = byteswap<T>(data);
+    }
+    std::memcpy(vdata.data()+1, &data, sizeof(data));
+    std::cout << "vdata=" << str(vdata) << std::endl;
+    if (layout.bit_pos_end_) {
+        vdata = vector_shift(vdata, layout.bit_pos_end_);
+    }
+
+    vdata.erase(vdata.begin(), vdata.end() - (layout.byte_pos_end_ - layout.byte_pos_begin_ + 1));
+    std::cout << "vdata=" << str(vdata) << " " << layout.byte_pos_end_ - layout.byte_pos_begin_ + 1 << std::endl;
+
+    // 開始、終了バイトのマスクパターン
+    uint8_t l_mask = 0xff - (0xff >> (7 - layout.bit_pos_begin_)),
+    r_mask = 0xff - (0xff << layout.bit_pos_end_);
+
+    for (int i = layout.byte_pos_begin_, j = 0; i <= layout.byte_pos_end_; i++, j++) {
+        if (i == layout.byte_pos_begin_) {
+            dst[i] &= l_mask;
+        }
+        else if (i == layout.byte_pos_end_) {
+            dst[i] &= r_mask;
+        }
+        dst[i] |= vdata[j];
+    }
+
+    return dst;
 }

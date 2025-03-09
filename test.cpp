@@ -51,27 +51,26 @@ TEST(ExtractBitsTest, BasicTests) {
   EXPECT_EQ(64, layout.length());
   result = extract_bits(data, layout);
   EXPECT_EQ("23 34 45 56 67 78 89 9a", str(result));
-
 }
 
 TEST(ExtractBitsTest2, BasicTests) {
-    std::vector<uint8_t> data = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
-        0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
-    Layout layout = {0, 3, 1, 4};
-    uint8_t ui8 = extract_bits<uint8_t>(data, layout);
-    EXPECT_EQ(0x12, static_cast<int>(ui8));
-    
-    layout = {12, 1, 14, 2};
-    uint16_t ui16 = extract_bits<uint16_t>(data, layout);
-    EXPECT_EQ(0x7bbf, ui16);
+  std::vector<uint8_t> data = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
+                               0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
+  Layout layout = {0, 3, 1, 4};
+  uint8_t ui8 = extract_bits<uint8_t>(data, layout);
+  EXPECT_EQ(0x12, static_cast<int>(ui8));
 
-    layout = {0, 7, 7, 0};
-    uint64_t ui64 = extract_bits<uint64_t>(data, layout);
-    EXPECT_EQ(0x1122334455667788, ui64);
+  layout = {12, 1, 14, 2};
+  uint16_t ui16 = extract_bits<uint16_t>(data, layout);
+  EXPECT_EQ(0x7bbf, ui16);
 
-    layout = {1, 3, 9, 4};
-    ui64 = extract_bits<uint64_t>(data, layout);
-    EXPECT_EQ(0x233445566778899a, ui64);
+  layout = {0, 7, 7, 0};
+  uint64_t ui64 = extract_bits<uint64_t>(data, layout);
+  EXPECT_EQ(0x1122334455667788, ui64);
+
+  layout = {1, 3, 9, 4};
+  ui64 = extract_bits<uint64_t>(data, layout);
+  EXPECT_EQ(0x233445566778899a, ui64);
 }
 
 TEST(LayoutTest, ValidCases) {
@@ -210,6 +209,60 @@ TEST(LayoutTest, LengthInvalidBitPosEnd) {
   EXPECT_EQ(layout.length(), 0);
 }
 
+TEST(VectorShiftTest, NoShift) {
+  std::vector<uint8_t> data = {0b00000001, 0b00000010};
+  EXPECT_EQ(vector_shift(data, 0), data);
+}
+
+TEST(VectorShiftTest, ShiftBy1) {
+  std::vector<uint8_t> data = {0b00000001, 0b00000010};
+  std::vector<uint8_t> expected = {0b00000010, 0b00000100};
+  EXPECT_EQ(vector_shift(data, 1), expected);
+}
+
+TEST(VectorShiftTest, ShiftBy7) {
+  std::vector<uint8_t> data = {0b00000001, 0b00000010};
+  std::vector<uint8_t> expected = {0b10000001, 0b00000000};
+  EXPECT_EQ(str(vector_shift(data,7)), str(expected));
+}
+
+TEST(VectorShiftTest, EmptyVector) {
+  std::vector<uint8_t> data = {};
+  EXPECT_EQ(vector_shift(data, 5), data);
+}
+
+TEST(VectorShiftTest, AllOnes) {
+  std::vector<uint8_t> data = {0xFF, 0xFF};
+  std::vector<uint8_t> expected = {
+      0xFf, 0xFe};  // 左に1ビットシフトして最上位ビットが隣に移動
+  EXPECT_EQ(vector_shift(data, 1), expected);
+}
+
+TEST(WriteBits, BasicTest) {
+    std::vector<uint8_t> data = {0, 0, 0, 0};
+    std::vector<uint8_t> expected = {0xff, 0xff, 0, 0};
+    Layout layout = {0, 7, 1, 0};
+    uint16_t value = 0xffff;
+    EXPECT_EQ(str(write_bits(data, layout, value)), str(expected));
+
+    data = {0xff, 0xff, 0xff, 0xff};
+    expected = {0xff, 0, 0, 0xff};
+    value = 0;
+    layout = {1,7, 2, 0};
+    EXPECT_EQ(str(write_bits(data, layout, value)), str(expected));
+    
+    data = {0xff, 0xff, 0xff, 0xff};
+    expected = {0xff, 0x12, 0x34, 0xff};
+    value = 0x1234;
+    layout = {1, 7, 2, 0};
+    EXPECT_EQ(str(write_bits(data, layout, value)), str(expected));
+    
+    data = {0, 0, 0, 0};
+    expected = {0, 1, 0xff, 0xfe};
+    value = 0xffff;
+    layout = {1, 0, 3, 1};
+    EXPECT_EQ(str(write_bits(data, layout, value)), str(expected));
+}
 // メイン関数（Google Testのエントリポイント）
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
