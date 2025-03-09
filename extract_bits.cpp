@@ -22,6 +22,7 @@ std::string str(std::vector<uint8_t> a) {
   return ss.str();
 }
 
+
 std::vector<uint8_t> extract_bits(std::vector<uint8_t> src, Layout layout) {
   size_t len = layout.byte_pos_end_ - layout.byte_pos_begin_ + 1;
   uint8_t r_mask = 0xff >> (7 - layout.bit_pos_begin_);

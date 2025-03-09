@@ -42,6 +42,36 @@ TEST(ExtractBitsTest, BasicTests) {
   layout = {12, 1, 14, 2};
   result = extract_bits(data, layout);
   EXPECT_EQ("00 00 00 00 00 00 7b bf", str(result));
+
+  layout = {0, 7, 7, 0};
+  result = extract_bits(data, layout);
+  EXPECT_EQ("11 22 33 44 55 66 77 88", str(result));
+
+  layout = {1, 3, 9, 4};
+  EXPECT_EQ(64, layout.length());
+  result = extract_bits(data, layout);
+  EXPECT_EQ("23 34 45 56 67 78 89 9a", str(result));
+
+}
+
+TEST(ExtractBitsTest2, BasicTests) {
+    std::vector<uint8_t> data = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
+        0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
+    Layout layout = {0, 3, 1, 4};
+    uint8_t ui8 = extract_bits<uint8_t>(data, layout);
+    EXPECT_EQ(0x12, static_cast<int>(ui8));
+    
+    layout = {12, 1, 14, 2};
+    uint16_t ui16 = extract_bits<uint16_t>(data, layout);
+    EXPECT_EQ(0x7bbf, ui16);
+
+    layout = {0, 7, 7, 0};
+    uint64_t ui64 = extract_bits<uint64_t>(data, layout);
+    EXPECT_EQ(0x1122334455667788, ui64);
+
+    layout = {1, 3, 9, 4};
+    ui64 = extract_bits<uint64_t>(data, layout);
+    EXPECT_EQ(0x233445566778899a, ui64);
 }
 
 TEST(LayoutTest, ValidCases) {
